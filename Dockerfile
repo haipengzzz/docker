@@ -1,33 +1,18 @@
-FROM openjdk:8-alpine
+FROM centos:latest
+MAINTAINER waterlufei
 
-ARG NAME
-ARG VERSION
-ARG JAR_FILE
+#install jdk and tomcat
 
-LABEL name=$NAME \
-      version=$VERSION
+ADD jdk-8u251-linux-x64.tar.gz /usr/java/
+ADD apache /home/schoolapp/
 
-# 设定时区
-ENV TZ=Asia/Shanghai
-RUN set -eux; \
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime; \
-    echo $TZ > /etc/timezone
-
-# 新建用户java-app
-RUN set -eux; \
-    addgroup --gid 1000 java-app; \
-    adduser -S -u 1000 -g java-app -h /home/java-app/ -s /bin/sh -D java-app; \
-    mkdir -p /home/java-app/lib /home/java-app/etc /home/java-app/jmx-ssl /home/java-app/logs /home/java-app/tmp /home/java-app/jmx-exporter/lib /home/java-app/jmx-exporter/etc; \
-    chown -R java-app:java-app /home/java-app
-
-# 导入启动脚本
-COPY --chown=java-app:java-app docker-entrypoint.sh /home/java-app/docker-entrypoint.sh
-
-# 导入JAR
-COPY --chown=java-app:java-app target/${JAR_FILE} /home/java-app/lib/app.jar
-
-USER java-app
-
-ENTRYPOINT ["/home/java-app/docker-entrypoint.sh"]
+#jdk enviroment
+ENV JAVA_HOME=/usr/java/jdk1.8.0_251
+ENV JRE_HOME=/usr/java/jdk1.8.0_251/jre
+ENV CLASSPATH=$JAVA_HOME/lib:$JAVA_HOME/jre/lib
+ENV PATH=$JAVA_HOME/bin:$PATH
 
 EXPOSE 8080
+
+#tomcat self start
+CMD ["/home/schoolapp/apache-tomcat-8.5.57/bin/catalina.sh","run"]
